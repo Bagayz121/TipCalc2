@@ -26,9 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.tipcalc.ui.theme.TipCalcTheme
+import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,8 +51,8 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
     var billAmount by remember { mutableStateOf("") }
     var dishCount by remember { mutableStateOf("") }
     var tipPercent by remember { mutableStateOf(0f) }
-    // Состояние для текущей скидки
     var discountPercent by remember { mutableStateOf(0) }
+    var resultText by remember { mutableStateOf("") }
 
     Column(
         modifier = modifier
@@ -62,26 +64,33 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         Text("Калькулятор счёта", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(16.dp))
 
+        // Валидация: разрешаем только цифры и точку для суммы
         OutlinedTextField(
             value = billAmount,
-            onValueChange = { billAmount = it },
+            onValueChange = { input ->
+                if (input.isEmpty() || input.matches(Regex("^\\d*\\.?\\d*$"))) {
+                    billAmount = input
+                }
+            },
             label = { Text("Сумма счёта") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(8.dp))
 
-        // Логика выбора скидки при вводе блюд
+        // Валидация: разрешаем только цифры для количества
         OutlinedTextField(
             value = dishCount,
             onValueChange = { input ->
-                dishCount = input
-                val count = input.toIntOrNull() ?: 0
-                discountPercent = when {
-                    count in 1..2 -> 3
-                    count in 3..5 -> 5
-                    count in 6..10 -> 7
-                    count > 10 -> 10
-                    else -> 0
+                if (input.isEmpty() || input.all { it.isDigit() }) {
+                    dishCount = input
+                    val count = input.toIntOrNull() ?: 0
+                    discountPercent = when {
+                        count in 1..2 -> 3
+                        count in 3..5 -> 5
+                        count in 6..10 -> 7
+                        count > 10 -> 10
+                        else -> 0
+                    }
                 }
             },
             label = { Text("Количество блюд") },
@@ -89,18 +98,19 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(16.dp))
 
-        Text("Чаевые: ${tipPercent.toInt()}%")
+        // Добавляем steps = 24, чтобы слайдер двигался целыми шагами от 0 до 25
+        Text("Чаевые: ${tipPercent.roundToInt()}%")
         Slider(
             value = tipPercent,
             onValueChange = { tipPercent = it },
             valueRange = 0f..25f,
+            steps = 24,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(16.dp))
 
         Text("Скидка (выбирается автоматически):")
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Выбор кнопки зависит от значения discountPercent
             RadioButton(selected = discountPercent == 3, onClick = null)
             Text("3% ")
             RadioButton(selected = discountPercent == 5, onClick = null)
@@ -112,9 +122,37 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         }
         Spacer(Modifier.height(16.dp))
 
-        Button(onClick = { }) {
+        Button(onClick = {
+            val bill = billAmount.toDoubleOrNull()
+            if (bill == null || bill <= 0) {
+                resultText = "Введите корректную сумму"
+                return@Button
+            }
+
+            // Берем именно округленное значение, чтобы гарантировать точность
+            val exactTip = tipPercent.roundToInt()
+
+            val tipAmount = bill * (exactTip / 100.0)
+            val discountAmount = bill * (discountPercent / 100.0)
+            val total = bill + tipAmount - discountAmount
+
+            resultText = String.format(
+                "Счёт: %.2f\nЧаевые: %.2f\nСкидка: -%.2f\nИтого: %.2f",
+                bill, tipAmount, discountAmount, total
+            )
+        }) {
             Text("Рассчитать")
         }
+
+        Spacer(Modifier.height(16.dp))
+
+        // Текст выровнен по левому краю и не прыгает
+        Text(
+            text = resultText,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
