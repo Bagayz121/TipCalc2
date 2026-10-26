@@ -20,6 +20,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,57 +46,55 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun TipCalcScreen(modifier: Modifier = Modifier) {
+    // Добавляем состояния для ввода
+    var billAmount by remember { mutableStateOf("") }
+    var dishCount by remember { mutableStateOf("") }
+    var tipPercent by remember { mutableStateOf(0f) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Калькулятор чаевых", style = MaterialTheme.typography.headlineSmall)
+        Text("Калькулятор счёта", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(16.dp))
 
-        // Поле ввода суммы счёта
         OutlinedTextField(
-            value = "",
-            onValueChange = { },
+            value = billAmount,
+            onValueChange = { billAmount = it },
             label = { Text("Сумма счёта") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(8.dp))
 
-        // Поле ввода количества блюд
         OutlinedTextField(
-            value = "",
-            onValueChange = { },
+            value = dishCount,
+            onValueChange = { dishCount = it },
             label = { Text("Количество блюд") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(16.dp))
 
-        // Слайдер
-        Text(text = "Чаевые: 0%")
+        // Слайдер теперь двигается, и текст обновляется
+        Text("Чаевые: ${tipPercent.toInt()}%")
         Slider(
-            value = 0f,
-            onValueChange = { },
+            value = tipPercent,
+            onValueChange = { tipPercent = it },
             valueRange = 0f..25f,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(16.dp))
 
-        // Группа радиокнопок для скидки
-        Text(text = "Скидка по количеству блюд:", style = MaterialTheme.typography.bodyLarge)
+        Text("Скидка (зависит от блюд):")
         Row(verticalAlignment = Alignment.CenterVertically) {
             RadioButton(selected = false, onClick = null)
             Text("3%")
-            Spacer(Modifier.padding(4.dp))
             RadioButton(selected = false, onClick = null)
             Text("5%")
-            Spacer(Modifier.padding(4.dp))
             RadioButton(selected = false, onClick = null)
             Text("7%")
-            Spacer(Modifier.padding(4.dp))
             RadioButton(selected = false, onClick = null)
             Text("10%")
         }
@@ -101,8 +103,6 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         Button(onClick = { }) {
             Text("Рассчитать")
         }
-        Spacer(Modifier.height(16.dp))
-        Text(text = "Итог: ")
     }
 }
 
