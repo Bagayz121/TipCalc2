@@ -46,10 +46,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun TipCalcScreen(modifier: Modifier = Modifier) {
-    // Добавляем состояния для ввода
     var billAmount by remember { mutableStateOf("") }
     var dishCount by remember { mutableStateOf("") }
     var tipPercent by remember { mutableStateOf(0f) }
+    // Состояние для текущей скидки
+    var discountPercent by remember { mutableStateOf(0) }
 
     Column(
         modifier = modifier
@@ -69,15 +70,25 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(8.dp))
 
+        // Логика выбора скидки при вводе блюд
         OutlinedTextField(
             value = dishCount,
-            onValueChange = { dishCount = it },
+            onValueChange = { input ->
+                dishCount = input
+                val count = input.toIntOrNull() ?: 0
+                discountPercent = when {
+                    count in 1..2 -> 3
+                    count in 3..5 -> 5
+                    count in 6..10 -> 7
+                    count > 10 -> 10
+                    else -> 0
+                }
+            },
             label = { Text("Количество блюд") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(16.dp))
 
-        // Слайдер теперь двигается, и текст обновляется
         Text("Чаевые: ${tipPercent.toInt()}%")
         Slider(
             value = tipPercent,
@@ -87,15 +98,16 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(16.dp))
 
-        Text("Скидка (зависит от блюд):")
+        Text("Скидка (выбирается автоматически):")
         Row(verticalAlignment = Alignment.CenterVertically) {
-            RadioButton(selected = false, onClick = null)
-            Text("3%")
-            RadioButton(selected = false, onClick = null)
-            Text("5%")
-            RadioButton(selected = false, onClick = null)
-            Text("7%")
-            RadioButton(selected = false, onClick = null)
+            // Выбор кнопки зависит от значения discountPercent
+            RadioButton(selected = discountPercent == 3, onClick = null)
+            Text("3% ")
+            RadioButton(selected = discountPercent == 5, onClick = null)
+            Text("5% ")
+            RadioButton(selected = discountPercent == 7, onClick = null)
+            Text("7% ")
+            RadioButton(selected = discountPercent == 10, onClick = null)
             Text("10%")
         }
         Spacer(Modifier.height(16.dp))
