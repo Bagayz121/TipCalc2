@@ -98,13 +98,13 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(16.dp))
 
-        // Добавляем steps = 24, чтобы слайдер двигался целыми шагами от 0 до 25
+        // Слайдер с шагом в 1% и точным отображением
         Text("Чаевые: ${tipPercent.roundToInt()}%")
         Slider(
             value = tipPercent,
             onValueChange = { tipPercent = it },
             valueRange = 0f..25f,
-            steps = 24,
+            steps = 24, // Делает слайдер дискретным (от 0 до 25 ровно)
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(16.dp))
@@ -129,16 +129,17 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
                 return@Button
             }
 
-            // Берем именно округленное значение, чтобы гарантировать точность
+            // Берем ровно округленное значение чаевых для точного расчета
             val exactTip = tipPercent.roundToInt()
 
             val tipAmount = bill * (exactTip / 100.0)
             val discountAmount = bill * (discountPercent / 100.0)
             val total = bill + tipAmount - discountAmount
 
+            // Форматируем вывод с указанием процентов
             resultText = String.format(
-                "Счёт: %.2f\nЧаевые: %.2f\nСкидка: -%.2f\nИтого: %.2f",
-                bill, tipAmount, discountAmount, total
+                "Счёт: %.2f\nЧаевые (%d%%): %.2f\nСкидка (%d%%): -%.2f\nИтого: %.2f",
+                bill, exactTip, tipAmount, discountPercent, discountAmount, total
             )
         }) {
             Text("Рассчитать")
@@ -146,7 +147,7 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(16.dp))
 
-        // Текст выровнен по левому краю и не прыгает
+        // Текст выровнен по левому краю
         Text(
             text = resultText,
             style = MaterialTheme.typography.bodyLarge,
